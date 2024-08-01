@@ -2,6 +2,7 @@ package com.appsdeveloperblog.ws.products.service;
 
 import com.appsdeveloperblog.ws.core.ProductCreatedEvent;
 import com.appsdeveloperblog.ws.products.rest.CreateProductRestModel;
+import org.apache.kafka.clients.producer.ProducerRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -33,7 +34,10 @@ public class ProductServiceImpl implements ProductService{
                 product.getTitle(), product.getPrice(), product.getQuantity());
 
         LOGGER.info("Before publishing a ProductCreatedEvent");
-        SendResult<String, ProductCreatedEvent> result = kafkaTemplate.send("product-created-events-topic", productId, productCreatedEvent).get();
+
+        ProducerRecord<String, ProductCreatedEvent> record = new ProducerRecord<>("product-created-events-topic", productId, productCreatedEvent);
+        record.headers().add("messageId", UUID.randomUUID().toString().getBytes());
+        SendResult<String, ProductCreatedEvent> result = kafkaTemplate.send(record).get();
 
 //        CompletableFuture<SendResult<String, ProductCreatedEvent>> future = kafkaTemplate.send("product-created-events-topic", productId, productCreatedEvent);
 //        future.whenComplete((result, exception) -> {
